@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo Caribe Play</title>
+    
+    <style>
+        /* === VARIABLES Y ESTILOS BASE === */
+        :root {
+            --color-bg: #008080; /* Verde Azulado Caribe */
+            --color-primary: #ffcc00; /* Dorado/Amarillo */
+            --color-secondary: #ff5722; /* Naranja para resaltar */
+            --color-free: #3f51b5; /* Azul para el espacio libre */
+            --color-marcado: #4caf50; /* Verde de la marca */
+            --color-admin-text: #f0f0f0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--color-bg); 
+            color: #ffffff;
+            padding: 10px;
+            text-align: center;
+            margin: 0;
+        }
+
+        h1 { margin-bottom: 5px; }
+
+        /* === PANTALLA DE SOPORTE (MARQUEE) === */
+        .marquee-support {
+            background-color: #004d4d;
+            color: var(--color-primary);
+            padding: 5px 0;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-top: 2px solid var(--color-primary);
+            border-bottom: 2px solid var(--color-primary);
+            margin-bottom: 15px;
+        }
+        
+        /* === MARQUEE INFORMATIVO DE PREMIO (NUEVO) === */
+        .marquee-premio-info {
+            background-color: #f44336; /* Rojo para destacar el cambio */
+            color: white;
+            padding: 5px 0;
+            font-size: 0.9em;
+            font-weight: bold;
+            border-radius: 5px;
+            margin: 5px auto 15px auto;
+            max-width: 900px;
+            overflow: hidden; /* Asegura que solo se vea el contenido del marquee */
+        }
+
+        /* === PREMIO FIJO DISPLAY === */
+        #premio-contenedor {
+            background: linear-gradient(135deg, #ffd700, #ffcc00, #ff5722);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            margin: 20px auto 0px auto; /* Reduje el margin-bottom */
+            max-width: 350px;
+            border: 3px solid white;
+            color: #373737;
+        }
+        #premio-contenedor h2 {
+            margin: 0 0 5px 0;
+            font-size: 1.2em;
+            font-weight: 900;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+        }
+        #premio-contenedor span {
+            font-size: 2.5em;
+            font-weight: 900;
+            display: block;
+        }
+
+        /* === CONTROLES DE BOTONES === */
+        .controles { margin-top: 20px; margin-bottom: 20px; }
+        .controles button {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        #opcion-cantidad button {
+            background-color: #00a0a0;
+            color: white;
+            border: 2px solid white;
+        }
+
+        #opcion-cantidad button.selected {
+            background-color: var(--color-secondary);
+            border-color: var(--color-primary);
+        }
+        
+        #btn-cantar-bingo {
+            background-color: var(--color-marcado); 
+            color: white;
+        }
+        
+        /* === ESTILOS DE JUEGO (Cartón, Tablero, Pago) === */
+        #carton-principal-contenedor { 
+            width: 95vw; 
+            max-width: 900px; 
+            margin: 10px auto; 
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .carton-bingo {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr); 
+            border: 5px solid var(--color-primary); 
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .celda {
+            border: 1px solid var(--color-primary);
+            padding: 10px 0;
+            font-size: 1.4em;
+            background-color: #00a0a0; 
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            user-select: none;
+        }
+
+        .encabezado {
+            background-color: var(--color-secondary); 
+            font-size: 1.6em;
+            padding: 8px 0;
+        }
+        
+        .celda-libre {
+            background-color: var(--color-free) !important;
+            color: white;
+        }
+
+        .marcado {
+            background-color: var(--color-marcado) !important;
+            color: white;
+            transform: scale(1.05);
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        /* Estilo para la bola actual y temporizador */
+        #bola-actual-contenedor {
+            padding: 10px;
+            background: #004d4d;
+            border-radius: 10px;
+            margin: 15px auto;
+            max-width: 300px;
+        }
+        #bola-actual {
+            font-size: 2em;
+            color: var(--color-primary);
+            background: #373737; 
+            border-radius: 8px;
+            padding: 5px 15px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        
+        /* Estilos para las últimas bolas */
+        #ultimas-bolas-contenedor {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .bola-historial {
+            font-size: 0.9em;
+            color: #373737;
+            background-color: #ffffff;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            line-height: 35px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--color-secondary);
+        }
+        
+        /* TABLERO GENERAL (1-75) */
+        #tablero-general-contenedor {
+            padding: 10px;
+            background-color: #004d4d;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        #tablero-general {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr); 
+            gap: 5px;
+            padding: 10px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        #tablero-general div {
+            padding: 5px;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--color-bg);
+            border: 1px solid #ffffff50;
+            font-size: 0.7em;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .bola-extraida {
+             background-color: var(--color-secondary) !important;
+             color: white;
+             font-weight: bold;
+             border-color: var(--color-primary);
+        }
+
+        /* === ESTILOS DE PAGO === */
+        #panel-pago {
+            background-color: #004d4d;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 450px;
+            margin: 20px auto;
+            border: 3px solid var(--color-primary);
+        }
+        
+        #area-referencia input[type="text"], #area-referencia select, #admin-controles-juego input[type="number"], #admin-passcode-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box; 
+            color: #373737; 
+        }
+        
+        #area-referencia select {
+            color: #373737;
+        }
+        
+        /* Asegurar que el placeholder/opción no seleccionada se vea diferente */
+        #area-referencia select option[disabled]:checked {
+            color: gray;
+        }
+        #area-referencia select:required:invalid {
+            color: gray;
+        }
+
+
+        /* === PANEL DE ADMINISTRACIÓN (ESTILIZADO) === */
+        #panel-admin-acceso {
+            margin-top: 30px;
+            padding: 15px; 
+            background: #004d4d;
+            border-radius: 12px; 
+            max-width: 450px; 
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); 
+        }
+        
+        #panel-admin {
+            background-color: #2c3e50;
+            padding: 30px; 
+            border: 5px solid var(--color-primary); 
+            border-radius: 15px; 
+            margin-top: 30px;
+            text-align: left;
+            color: var(--color-admin-text);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7);
+        }
+        
+        #admin-passcode-area {
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #admin-passcode-input {
+            flex-grow: 1;
+            margin-right: 10px;
+            width: auto !important; /* Sobreescribir el 100% de arriba */
+            color: #373737; /* Asegurar que el texto sea visible */
+        }
+        
+        #btn-admin-login, #btn-desbloquear-admin {
+            background: var(--color-primary);
+            color: #373737;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        #admin-controles-juego input[type="number"], #admin-controles-juego button {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+        #admin-controles-juego button {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        #btn-guardar-premio {
+             background: var(--color-marcado);
+             color: white;
+             font-weight: bold;
+        }
+        
+        #btn-iniciar-bolas {
+            background-color: #00a0a0;
+            color: white;
+        }
+        #btn-detener-bolas {
+             background-color: var(--color-secondary);
+             color: white;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.8em;
+            border-radius: 8px; 
+            overflow: hidden; 
+            table-layout: fixed; 
+        }
+        
+        .admin-table th, .admin-table td {
+            border: none; 
+            padding: 8px; 
+            text-align: left;
+            word-wrap: break-word; 
+        }
+
+        .admin-table th {
+            background-color: #34495e; 
+            color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .admin-table .btn-admin {
+            padding: 5px 8px; 
+            border: none;
+            cursor: pointer;
+            border-radius: 5px; 
+            font-weight: bold;
+            margin: 2px;
+            display: block; 
+            width: 100%;
+            font-size: 0.9em;
+        }
+        
+        .btn-aprobar { background-color: var(--color-marcado); color: white; }
+        .btn-rechazar { background-color: var(--color-secondary); color: white; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>BINGO CARIBE PLAY</h1>
+    </div>
+    
+    <div class="marquee-support">
+        <marquee behavior="scroll" direction="left" scrollamount="4">
+            SOPORTE 📱 04128481584 | SOPORTE 📱 04128481584 | SOPORTE 📱 04128481584
+        </marquee>
+    </div>
+
+    <!-- CUADRO DE PREMIO FIJO A GANAR -->
+    <div id="premio-contenedor">
+        <h2>🏆 PREMIO A GANAR 🏆</h2>
+        <span id="premio-fijo-display">Bs 0.00</span>
+    </div>
+    <!-- FIN CUADRO DE PREMIO -->
+    
+    <!-- MARQUEE INFORMATIVO DE PREMIO (NUEVO) -->
+    <div class="marquee-premio-info">
+        <marquee behavior="scroll" direction="right" scrollamount="3">
+            EL PREMIO SE ACTUALIZA AL INICIAR CADA PARTIDA
+        </marquee>
+    </div>
+
+    <div class="controles" id="area-seleccion">
+        <h2>Paso 1: Elige tu cantidad de cartones</h2>
+        
+        <div id="opcion-cantidad">
+            <button data-cantidad="1">1 Cartón</button>
+            <button data-cantidad="2">2 Cartones</button>
+            <button data-cantidad="3">3 Cartones (+1 Regalo)</button>
+        </div>
+    </div>
+
+    <hr style="border-color: var(--color-primary);">
+
+    <div id="panel-pago" style="display: none;">
+        <h2>Paso 2: Realiza tu Pago</h2>
+        
+        <p id="costo-total"></p>
+        
+        <div id="datos-pago">
+            <p>Por favor, realiza tu pago a los siguientes datos:</p>
+            <p>👥 Cédula: <strong>27146006</strong></p>
+            <p>📱 Teléfono: <strong>04128481584</strong></p>
+            <p>🏦 Banco Mercantil: <strong>0105</strong></p>
+            <p>🏦 Banco Venezuela: <strong>0102</strong></p>
+            <p style="margin-top: 10px;">Presiona "Ya Pagué" y espera la verificación del administrador.</p>
+        </div>
+        
+        <div id="area-referencia">
+            <input type="text" id="input-nombre" placeholder="* Nombre y Apellido (Obligatorio)" required>
+            
+            <select id="input-banco" required>
+                <option value="" disabled selected>* Banco de Destino (Obligatorio)</option>
+                <option value="Mercantil">Banco Mercantil (0105)</option>
+                <option value="Venezuela">Banco de Venezuela (0102)</option>
+            </select>
+
+            <input type="text" id="input-referencia" placeholder="* Número de Referencia (Obligatorio)" required>
+            
+            <button id="btn-ya-pague" class="controles button" style="background-color: var(--color-secondary); color: white;">Ya Pagué, ¡Esperar Activación!</button>
+        </div>
+    </div>
+
+    <div id="area-juego-activa" style="display: none;">
+        <div class="controles">
+            <button id="btn-cantar-bingo" disabled>¡Cantar BINGO!</button>
+            <button id="claim-prize-whatsapp-btn" style="background-color: #25d366; color: white;">
+                RECLAMAR PREMIO 📱
+            </button>
+        </div>
+
+        <div id="bola-actual-contenedor">
+            Bola Siguiente en: <span id="temporizador-bola" style="color: var(--color-secondary); font-weight: bold;">--s</span> | Bola Actual: <span id="bola-actual">--</span>
+        </div>
+        
+        <!-- Contenedor para las últimas 5 bolas -->
+        <div id="ultimas-bolas-contenedor">
+            <span style="color: #ccc; font-size: 0.9em;">(Últimas 5 Bolas: )</span>
+        </div>
+        
+        <div id="carton-principal-contenedor">
+            </div>
+    </div>
+
+    <div id="panel-fin-juego" style="display: none;">
+        <h2>¡Felicidades! Se ha cantado BINGO.</h2>
+        <p id="mensaje-fin-juego">La partida ha finalizado. ¿Quieres unirte a la siguiente ronda?</p>
+        <button id="btn-jugar-de-nuevo" class="controles button" style="background-color: var(--color-marcado); color: white;">Sí, ¡Comprar cartones de nuevo!</button>
+        <button id="btn-finalizar-juego" class="controles button" style="background-color: var(--color-secondary); color: white;">No, Salir</button>
+    </div>
+    
+    <div id="mensaje-estado">Selecciona cuántos cartones deseas comprar para empezar.</div>
+
+    <!-- === ACCESO A PANEL DE ADMINISTRACIÓN === -->
+    <div id="panel-admin-acceso">
+        <button id="btn-soy-administrador" style="background: #2c3e50; color: white; padding: 10px 20px; border-radius: 50px; cursor: pointer;">Soy Administrador</button>
+        <div id="admin-passcode-area" style="display: none;">
+             <input type="password" id="admin-passcode-input" placeholder="Código de Acceso">
+             <button id="btn-desbloquear-admin">Acceder</button>
+        </div>
+    </div>
+
+    <!-- === PANEL DE ADMINISTRACIÓN (OCULTO POR DEFEITO) === -->
+    <div id="panel-admin" style="display: none;">
+        <h2>PANEL DE ADMINISTRACIÓN</h2>
+
+        <div id="admin-controles-juego">
+             <h3>Control de Partida</h3>
+             <input type="number" id="input-nuevo-premio" placeholder="Nuevo Premio (Bs)" value="0.00" step="0.01">
+             <button id="btn-guardar-premio">Guardar Premio</button>
+             
+             <hr style="border-color: #666; margin: 15px 0;">
+
+             <button id="btn-iniciar-bolas">Iniciar Extracción de Bolas</button>
+             <button id="btn-detener-bolas" disabled>Detener Extracción de Bolas</button>
+        </div>
+        
+        <hr style="border-color: #666; margin: 20px 0;">
+
+        <div id="admin-pagos">
+            <h3>Pagos Pendientes de Aprobación</h3>
+            <div id="pagos-pendientes-table">
+                <p>No hay pagos pendientes.</p>
+            </div>
+        </div>
+
+        <hr style="border-color: #666; margin: 20px 0;">
+        
+        <div id="admin-revision-bingo" style="display: none;">
+             <h3>REVISIÓN DE BINGO</h3>
+             <p id="revision-bingo-info"></p>
+             <button id="btn-aprobar-bingo" class="btn-admin btn-aprobar">Aprobar BINGO y Finalizar Partida</button>
+             <button id="btn-rechazar-bingo" class="btn-admin btn-rechazar">Rechazar BINGO y Continuar Juego</button>
+             <hr style="border-color: #666; margin: 20px 0;">
+        </div>
+
+
+        <div id="admin-usuarios">
+            <h3>Usuarios Activos en Juego</h3>
+            <div id="usuarios-activos-table">
+                <p>No hay usuarios activos jugando.</p>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="tablero-general-contenedor">
+        <h2>Tablero de Bolas Extraídas (1-75)</h2>
+        <div id="tablero-general">
+            <!-- Los números del 1 al 75 se renderizarán aquí -->
+            </div>
+    </div>
+
+    <script>
+        // === CONFIGURACIÓN GLOBAL ===
+        const COLUMNAS = { 'B': [1, 15], 'I': [16, 30], 'N': [31, 45], 'G': [46, 60], 'O': [61, 75] };
+        const MAX_CARTONES = 4;
+        const PRECIO_CARTON = 45; 
+        const INTERVALO_BOLA_MS = 8000; 
+        const ADMIN_PASSCODE = '0000'; 
+
+        // === ESTADO DEL JUEGO ===
+        let PREMIO_ACTUAL = 0.00; // Inicializado en 0.00 Bs
+        let cartonesActivos = []; 
+        let cartonesAComprar = 0; 
+        let bolasDisponibles = Array.from({ length: 75 }, (_, i) => i + 1);
+        let bolasExtraidas = []; 
+        let juegoInterval;
+        let temporizadorInterval;
+        let nombreUsuarioActual = '';
+        let estadoJuego = 'SETUP'; // SETUP | ESPERA_PAGO | ESPERA_INICIO | ACTIVO | EN_REVISION | FINALIZADO
+        
+        // === ESTADO DEL ADMINISTRADOR ===
+        let pagosPendientes = []; 
+        let usuariosActivos = []; 
+        let ultimoBingo = null; 
+        let partidaIniciadaAdmin = false; 
+        let currentUserPaymentID = localStorage.getItem('currentUserPaymentID') || null;
+
+        // === FUNCIONES DE LÓGICA DE CARTÓN ===
+        function generarNumerosColumna(letra) {
+            const [min, max] = COLUMNAS[letra];
+            let numeros = new Set();
+            while (numeros.size < 5) {
+                const num = Math.floor(Math.random() * (max - min + 1)) + min;
+                numeros.add(num);
+            }
+            return Array.from(numeros).sort((a, b) => a - b);
+        }
+        
+        function generarCartonBase() {
+            let carton = {};
+            for (const letra in COLUMNAS) {
+                carton[letra] = generarNumerosColumna(letra);
+            }
+
+            let celdas = [];
+            for (let i = 0; i < 5; i++) {
+                for (const letra in COLUMNAS) {
+                    let valor = carton[letra][i];
+                    if (letra === 'N' && i === 2) {
+                        valor = 'FREE'; 
+                    }
+                    celdas.push({
+                        letra: letra,
+                        valor: valor,
+                        marcado: (valor === 'FREE'), 
+                        esLibre: (valor === 'FREE')
+                    });
+                }
+            }
+            return { celdas };
+        }
+
+        function generarIDCartonUnico(existingIDs) {
+            let idFormateado;
+            do {
+                // Genera un ID de 3 dígitos
+                const idNumero = Math.floor(Math.random() * 900) + 100; 
+                idFormateado = idNumero.toString();
+            } while (existingIDs.has(idFormateado)); 
+            existingIDs.add(idFormateado);
+            return idFormateado;
+        }
+
+        // === FUNCIONES DE RENDERIZADO DE JUEGO ===
+
+        function crearElementoCelda(celda) {
+            const div = document.createElement('div');
+            div.classList.add('celda');
+            if (celda.esLibre) {
+                div.classList.add('celda-libre', 'marcado');
+            } else if (celda.marcado) {
+                div.classList.add('marcado');
+            }
+            div.textContent = celda.valor;
+            return div;
+        }
+
+        function renderizarCartonIndividual(carton, indice) {
+            const contenedorCarton = document.createElement('div');
+            contenedorCarton.classList.add('carton-individual');
+            contenedorCarton.id = `carton-${carton.id}`;
+            
+            const titulo = document.createElement('h3');
+            titulo.textContent = `Cartón #${carton.id} ${indice === 3 ? '(Regalo)' : ''}`; 
+            titulo.style.fontSize = '1.3em';
+            contenedorCarton.appendChild(titulo);
+            
+            const cuadrilla = document.createElement('div');
+            cuadrilla.classList.add('carton-bingo');
+            
+            for (const letra in COLUMNAS) {
+                const h = document.createElement('div');
+                h.classList.add('celda', 'encabezado');
+                h.textContent = letra;
+                cuadrilla.appendChild(h);
+            }
+
+            carton.celdas.forEach((celda, celdaIndex) => {
+                const celdaDiv = crearElementoCelda(celda);
+                celdaDiv.dataset.index = celdaIndex; 
+                celdaDiv.dataset.valor = celda.valor; 
+                
+                if (!celda.esLibre) {
+                     celdaDiv.style.cursor = 'pointer';
+                     celdaDiv.addEventListener('click', function() {
+                        if (estadoJuego !== 'ACTIVO') {
+                            // Usar alert temporalmente hasta implementar un modal personalizado.
+                            alert("El juego no está activo. Espera a que el administrador inicie la partida.");
+                            return;
+                        }
+                        
+                        const valorCelda = parseInt(this.dataset.valor);
+                        // Permitir marcar si la bola está extraída, sin necesidad de que sea la última
+                        if (bolasExtraidas.includes(valorCelda)) {
+                            this.classList.toggle('marcado');
+                            // Actualizar el estado interno del cartón para la comprobación de bingo
+                            carton.celdas[celdaIndex].marcado = this.classList.contains('marcado');
+                        } else {
+                            // Usar alert temporalmente hasta implementar un modal personalizado.
+                            alert(`ERROR: La bola ${valorCelda} aún no ha salido. Solo puedes marcar números extraídos.`);
+                        }
+                     });
+                }
+                cuadrilla.appendChild(celdaDiv);
+            });
+            
+            contenedorCarton.appendChild(cuadrilla);
+            return contenedorCarton;
+        }
+        
+        function renderizarTodosLosCartones(cartones) {
+            const contenedorPrincipal = document.getElementById('carton-principal-contenedor');
+            contenedorPrincipal.innerHTML = ''; 
+            
+            // Layout responsivo
+            if (cartones.length > 2) {
+                contenedorPrincipal.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            } else if (cartones.length > 0) {
+                contenedorPrincipal.style.gridTemplateColumns = '1fr';
+            }
+
+            cartones.forEach((carton, index) => {
+                contenedorPrincipal.appendChild(renderizarCartonIndividual(carton, index));
+            });
+        }
+
+        function inicializarTableroGeneral() {
+             const tableroGeneral = document.getElementById('tablero-general');
+             tableroGeneral.innerHTML = '';
+             
+             for (let i = 1; i <= 75; i++) {
+                 const bolaDiv = document.createElement('div');
+                 bolaDiv.textContent = i;
+                 bolaDiv.id = `bola-tablero-${i}`; // ID único
+                 tableroGeneral.appendChild(bolaDiv);
+             }
+        }
+
+        function actualizarTableroGeneral() {
+            // Limpiar y marcar las bolas extraídas
+            for (let i = 1; i <= 75; i++) {
+                 const bolaDiv = document.getElementById(`bola-tablero-${i}`);
+                 if (bolaDiv) {
+                    if (bolasExtraidas.includes(i)) {
+                         bolaDiv.classList.add('bola-extraida');
+                    } else {
+                         bolaDiv.classList.remove('bola-extraida');
+                    }
+                 }
+            }
+        }
+        
+        // Renderiza las últimas 5 bolas extraídas
+        function renderizarUltimasBolas() {
+            const contenedor = document.getElementById('ultimas-bolas-contenedor');
+            contenedor.innerHTML = '<span style="color: #ccc; font-size: 0.9em;">(Últimas 5 Bolas: </span>';
+
+            // Obtiene las últimas 5 bolas (o menos si hay menos de 5)
+            const ultimasBolas = bolasExtraidas.slice(-5).reverse(); // Invertir para mostrar de más reciente a menos
+
+            ultimasBolas.forEach(bola => {
+                 const bolaDiv = document.createElement('div');
+                 bolaDiv.classList.add('bola-historial');
+                 bolaDiv.textContent = obtenerLetra(bola) + bola;
+                 contenedor.appendChild(bolaDiv);
+            });
+             
+             contenedor.innerHTML += '<span style="color: #ccc; font-size: 0.9em;">)</span>';
+             
+             if(ultimasBolas.length === 0){
+                 contenedor.innerHTML = '<span style="color: #ccc; font-size: 0.9em;">(Últimas 5 Bolas: )</span>';
+             }
+        }
+        
+        // Función para actualizar el display del premio (USADA EN ADMIN)
+        function actualizarDisplayPremio() {
+             document.getElementById('premio-fijo-display').textContent = `Bs ${PREMIO_ACTUAL.toFixed(2)}`;
+             // Actualizar el valor del input del administrador
+             document.getElementById('input-nuevo-premio').value = PREMIO_ACTUAL.toFixed(2);
+        }
+
+
+        // === LÓGICA DE FLUJO DE JUEGO ===
+        
+        // Función para que el usuario pueda cancelar la espera si está atascado (NUEVA FUNCIÓN)
+        function cancelarEspera() {
+             // Usar alert temporalmente hasta implementar un modal personalizado.
+             alert("Se ha cancelado el estado de espera. Puedes elegir tus cartones de nuevo.");
+             resetearPantallaJuego();
+        }
+
+        function resetearPantallaJuego() {
+             // Oculta todos los paneles principales
+             document.getElementById('panel-pago').style.display = 'none';
+             document.getElementById('area-juego-activa').style.display = 'none';
+             document.getElementById('panel-fin-juego').style.display = 'none';
+             
+             // Muestra el selector de cartones
+             document.getElementById('area-seleccion').style.display = 'block';
+             document.querySelectorAll('#opcion-cantidad button').forEach(btn => btn.classList.remove('selected'));
+             
+             document.getElementById('mensaje-estado').textContent = 'Selecciona cuántos cartones deseas comprar para empezar.';
+             
+             // Reset de estado del juego local
+             cartonesActivos = [];
+             cartonesAComprar = 0;
+             nombreUsuarioActual = '';
+             estadoJuego = 'SETUP';
+             currentUserPaymentID = null; // Reiniciar el ID de pago del usuario
+             localStorage.removeItem('currentUserPaymentID'); // ¡BORRAR DEL LOCAL STORAGE!
+             
+             // Limpiar tablero de bolas si el juego termina
+             bolasDisponibles = Array.from({ length: 75 }, (_, i) => i + 1);
+             bolasExtraidas = [];
+             actualizarTableroGeneral();
+             document.getElementById('bola-actual').textContent = '--';
+             document.getElementById('temporizador-bola').textContent = '--s';
+             renderizarUltimasBolas(); // Limpiar el historial de bolas
+
+             // Detener la extracción si estaba activa
+             detenerExtraccionBolas();
+        }
+
+        function seleccionarCantidad(numCartones) {
+            cartonesAComprar = numCartones;
+            
+            const cartonesPagados = numCartones === 3 ? 3 : numCartones; 
+            const cantidadTotalCartones = numCartones === 3 ? MAX_CARTONES : numCartones; 
+            const costo = cartonesPagados * PRECIO_CARTON;
+            
+            document.getElementById('costo-total').textContent = `Total a pagar: ${costo.toFixed(2)} Bs. (${cantidadTotalCartones} Cartones)`;
+            
+            document.querySelectorAll('#opcion-cantidad button').forEach(btn => btn.classList.remove('selected'));
+            const botonActual = document.querySelector(`#opcion-cantidad button[data-cantidad="${numCartones}"]`);
+            if (botonActual) botonActual.classList.add('selected');
+            
+            document.getElementById('area-seleccion').style.display = 'none';
+            document.getElementById('panel-pago').style.display = 'block';
+            document.getElementById('mensaje-estado').textContent = `Comprando ${cantidadTotalCartones} cartones. Por favor, haz el pago.`;
+            estadoJuego = 'ESPERA_PAGO';
+        }
+
+        function registrarPago() {
+            const nombre = document.getElementById('input-nombre').value.trim();
+            const referencia = document.getElementById('input-referencia').value.trim();
+            const banco = document.getElementById('input-banco').value;
+            
+            // Verificación mejorada y estricta para todos los campos
+            if (nombre.length < 3) {
+                 // Usar alert temporalmente hasta implementar un modal personalizado.
+                alert("Por favor, ingresa tu Nombre y Apellido (mínimo 3 caracteres).");
+                return;
+            }
+            
+            if (banco === '') {
+                 // Usar alert temporalmente hasta implementar un modal personalizado.
+                alert("Por favor, selecciona un Banco de Destino.");
+                return;
+            }
+
+            if (referencia.length < 5) {
+                 // Usar alert temporalmente hasta implementar un modal personalizado.
+                alert("Por favor, ingresa un Número de Referencia válido (mínimo 5 caracteres).");
+                return;
+            }
+            
+            // Simulación de un ID de usuario único para este pago
+            // Usamos un ID temporal para que el admin pueda identificar el pago
+            const userID = Date.now().toString(36) + Math.random().toString(36).substring(2, 7);
+
+            const nuevoPago = {
+                id: userID,
+                nombre: nombre,
+                cartones: cartonesAComprar,
+                costo: cartonesAComprar * PRECIO_CARTON,
+                banco: banco,
+                referencia: referencia,
+                estado: 'PENDIENTE', 
+                timestamp: new Date().toLocaleString()
+            };
+
+            // Guarda el estado del pago localmente
+            pagosPendientes.push(nuevoPago);
+            
+            // Guarda el ID de pago localmente para que el usuario pueda ser activado
+            currentUserPaymentID = userID;
+            localStorage.setItem('currentUserPaymentID', userID);
+
+            // Actualiza la UI del usuario
+            document.getElementById('panel-pago').style.display = 'none';
+            document.getElementById('mensaje-estado').innerHTML = `Pago registrado. Esperando aprobación del administrador. Tu ID de pago es: <strong style="color: var(--color-primary);">${userID}</strong>`;
+            estadoJuego = 'ESPERA_PAGO';
+
+            // Actualiza el panel de administración
+            renderizarPagosPendientesAdmin();
+            // Usar alert temporalmente hasta implementar un modal personalizado.
+            alert(`¡Pago de ${nombre} registrado con éxito! Tu ID temporal es: ${userID}. Espera la aprobación del administrador (código 0000).`);
+        }
+        
+        // Función para verificar BINGO (simplificada: 5 números marcados en cualquier columna/fila/diagonal)
+        function verificarBingo(carton) {
+            // Lógica de verificación de 5 en línea
+            // 1. Columnas (5)
+            for (let c = 0; c < 5; c++) {
+                let count = 0;
+                for (let r = 0; r < 5; r++) {
+                    const celdaIndex = r * 5 + c; 
+                    if (carton.celdas[celdaIndex].marcado) {
+                        count++;
+                    }
+                }
+                if (count === 5) return true;
+            }
+
+            // 2. Filas (5)
+            for (let r = 0; r < 5; r++) {
+                let count = 0;
+                for (let c = 0; c < 5; c++) {
+                    const celdaIndex = r * 5 + c;
+                    if (carton.celdas[celdaIndex].marcado) {
+                        count++;
+                    }
+                }
+                if (count === 5) return true;
+            }
+
+            // 3. Diagonales (2)
+            // Diagonal principal (Top-Left a Bottom-Right)
+            if (carton.celdas[0].marcado && carton.celdas[6].marcado && carton.celdas[12].marcado && carton.celdas[18].marcado && carton.celdas[24].marcado) return true;
+            // Diagonal secundaria (Top-Right a Bottom-Left)
+            if (carton.celdas[4].marcado && carton.celdas[8].marcado && carton.celdas[12].marcado && carton.celdas[16].marcado && carton.celdas[20].marcado) return true;
+
+            return false;
+        }
+
+        function cantarBingo() {
+            if (estadoJuego !== 'ACTIVO') {
+                // Usar alert temporalmente hasta implementar un modal personalizado.
+                alert("El juego no está activo o ya ha finalizado.");
+                return;
+            }
+
+            let bingoEncontrado = false;
+            let cartonGanador = null;
+
+            cartonesActivos.forEach(carton => {
+                if (verificarBingo(carton)) {
+                    bingoEncontrado = true;
+                    cartonGanador = carton;
+                }
+            });
+
+            if (bingoEncontrado) {
+                // Notificar al administrador para revisión
+                ultimoBingo = {
+                    userID: currentUserPaymentID,
+                    nombre: nombreUsuarioActual,
+                    cartonID: cartonGanador.id,
+                    bolas: [...bolasExtraidas], // Copia del estado actual
+                    timestamp: new Date().toLocaleString()
+                };
+                
+                estadoJuego = 'EN_REVISION';
+                detenerExtraccionBolas(); // Pausar el juego
+                document.getElementById('mensaje-estado').textContent = `¡BINGO cantado por ${nombreUsuarioActual}! Esperando revisión del administrador...`;
+                document.getElementById('btn-cantar-bingo').disabled = true;
+
+                // Si el admin está logueado, mostrar el panel de revisión
+                if (document.getElementById('panel-admin').style.display === 'block') {
+                    mostrarRevisionBingoAdmin();
+                }
+
+            } else {
+                 // Usar alert temporalmente hasta implementar un modal personalizado.
+                alert("¡Falso BINGO! Asegúrate de tener 5 números en línea (fila, columna o diagonal) y que todos estén marcados.");
+            }
+        }
+        
+        // === LÓGICA DE EXTRACCIÓN DE BOLAS ===
+
+        function extraerBola() {
+            if (bolasDisponibles.length === 0) {
+                detenerExtraccionBolas();
+                document.getElementById('bola-actual').textContent = 'FIN';
+                document.getElementById('mensaje-estado').textContent = 'Todas las bolas han salido. La partida ha terminado sin BINGO.';
+                renderizarUltimasBolas(); // Asegurar que se actualice por última vez
+                return;
+            }
+
+            // Seleccionar una bola al azar
+            const indiceAleatorio = Math.floor(Math.random() * bolasDisponibles.length);
+            const bola = bolasDisponibles.splice(indiceAleatorio, 1)[0];
+            bolasExtraidas.push(bola);
+            
+            // Mostrar la bola actual
+            document.getElementById('bola-actual').textContent = obtenerLetra(bola) + ' ' + bola;
+            
+            // Actualizar el historial de últimas bolas
+            renderizarUltimasBolas();
+            
+            // Actualizar el tablero general
+            const bolaDiv = document.getElementById(`bola-tablero-${bola}`);
+            if (bolaDiv) {
+                bolaDiv.classList.add('bola-extraida');
+            }
+            
+            // Habilitar el botón de bingo si hay suficientes bolas
+            if (bolasExtraidas.length >= 5) {
+                 document.getElementById('btn-cantar-bingo').disabled = false;
+            }
+
+            // Reiniciar temporizador
+            iniciarTemporizador();
+        }
+        
+        function obtenerLetra(numero) {
+            if (numero >= 1 && numero <= 15) return 'B';
+            if (numero >= 16 && numero <= 30) return 'I';
+            if (numero >= 31 && numero <= 45) return 'N';
+            if (numero >= 46 && numero <= 60) return 'G';
+            if (numero >= 61 && numero <= 75) return 'O';
+            return '';
+        }
+
+        function iniciarTemporizador() {
+            clearInterval(temporizadorInterval);
+            let tiempoRestante = INTERVALO_BOLA_MS / 1000;
+            document.getElementById('temporizador-bola').textContent = `${tiempoRestante}s`;
+
+            temporizadorInterval = setInterval(() => {
+                tiempoRestante--;
+                document.getElementById('temporizador-bola').textContent = `${tiempoRestante}s`;
+
+                if (tiempoRestante <= 0) {
+                    clearInterval(temporizadorInterval);
+                    if (partidaIniciadaAdmin && estadoJuego === 'ACTIVO') {
+                       extraerBola();
+                    } else if (partidaIniciadaAdmin && estadoJuego === 'EN_REVISION') {
+                       // Si está en revisión, no extrae, pero mantiene el temporizador detenido/pausado
+                    } else {
+                       document.getElementById('temporizador-bola').textContent = '--s';
+                    }
+                }
+            }, 1000);
+        }
+        
+        // === FUNCIONES ADMINISTRADOR ===
+        
+        function loginAdmin() {
+            const passcode = document.getElementById('admin-passcode-input').value;
+            if (passcode === ADMIN_PASSCODE) {
+                document.getElementById('panel-admin-acceso').style.display = 'none';
+                document.getElementById('panel-admin').style.display = 'block';
+                // Usar alert temporalmente hasta implementar un modal personalizado.
+                alert("Acceso de Administrador concedido. Código: 0000");
+                renderizarPagosPendientesAdmin();
+                renderizarUsuariosActivosAdmin();
+                // Si hay un bingo pendiente, mostrar revisión
+                if (ultimoBingo) {
+                    mostrarRevisionBingoAdmin();
+                }
+
+            } else {
+                 // Usar alert temporalmente hasta implementar un modal personalizado.
+                alert("Código de Acceso incorrecto.");
+                document.getElementById('admin-passcode-input').value = '';
+            }
+        }
+        
+        function mostrarPanelAdminAcceso() {
+             document.getElementById('admin-passcode-area').style.display = 'flex';
+             document.getElementById('btn-soy-administrador').style.display = 'none';
+        }
+
+        function guardarPremioAdmin() {
+            const nuevoPremioInput = document.getElementById('input-nuevo-premio');
+            const nuevoPremio = parseFloat(nuevoPremioInput.value);
+
+            if (isNaN(nuevoPremio) || nuevoPremio < 0) { // Permitir 0, pero no negativo
+                 // Usar alert temporalmente hasta implementar un modal personalizado.
+                alert("Por favor, ingresa un valor de premio válido (no negativo).");
+                return;
+            }
+
+            PREMIO_ACTUAL = nuevoPremio;
+            actualizarDisplayPremio();
+             // Usar alert temporalmente hasta implementar un modal personalizado.
+            alert(`Premio actualizado a Bs ${PREMIO_ACTUAL.toFixed(2)}.`);
+        }
+        
+        function iniciarExtraccionBolas() {
+            if (partidaIniciadaAdmin) {
+                 // Usar alert temporalmente hasta implementar un modal personalizado.
+                alert("La extracción de bolas ya está en curso.");
+                return;
+            }
+            if (usuariosActivos.length === 0) {
+                 // Usar alert temporalmente hasta implementar un modal personalizado.
+                 alert("No hay usuarios activos para iniciar la partida. Espera por pagos aprobados.");
+                 return;
+            }
+
+            // Resetear para nueva partida
+            bolasDisponibles = Array.from({ length: 75 }, (_, i) => i + 1);
+            bolasExtraidas = [];
+            actualizarTableroGeneral();
+            
+            // Iniciar extracción
+            partidaIniciadaAdmin = true;
+            extraerBola(); 
+            
+            // Actualizar botones del admin
+            document.getElementById('btn-iniciar-bolas').disabled = true;
+            document.getElementById('btn-detener-bolas').disabled = false;
+            
+            // Notificar al usuario (si está activo)
+            if (estadoJuego === 'ESPERA_INICIO' || estadoJuego === 'ESPERA_PAGO') { // Manejar el caso por si el usuario es aprobado justo antes de iniciar
+                 estadoJuego = 'ACTIVO';
+                 document.getElementById('mensaje-estado').textContent = '¡Juego ACTIVO! ¡Revisa tus cartones y marca tus números!';
+            }
+             // Usar alert temporalmente hasta implementar un modal personalizado.
+            alert("Extracción de bolas iniciada. ¡Que empiece el BINGO!");
+        }
+
+        function detenerExtraccionBolas() {
+            clearInterval(juegoInterval);
+            clearInterval(temporizadorInterval);
+            partidaIniciadaAdmin = false;
+            
+            document.getElementById('btn-iniciar-bolas').disabled = false;
+            document.getElementById('btn-detener-bolas').disabled = true;
+
+            document.getElementById('temporizador-bola').textContent = 'PAUSA';
+        }
+
+        function aprobarPago(idPago) {
+            const index = pagosPendientes.findIndex(p => p.id === idPago);
+            if (index !== -1) {
+                const pago = pagosPendientes[index];
+
+                // 1. Mover a usuarios activos
+                const existingIDs = new Set(usuariosActivos.flatMap(user => user.cartones).map(c => c.id));
+                const cartonesGenerados = [];
+                const numCartones = pago.cartones === 3 ? MAX_CARTONES : pago.cartones; 
+
+                for (let i = 0; i < numCartones; i++) {
+                     const cartonBase = generarCartonBase();
+                     cartonesGenerados.push({
+                         id: generarIDCartonUnico(existingIDs),
+                         celdas: cartonBase.celdas,
+                     });
+                }
+                
+                const nuevoUsuarioActivo = {
+                     id: pago.id, 
+                     nombre: pago.nombre,
+                     cartones: cartonesGenerados,
+                     numCartones: numCartones
+                };
+                usuariosActivos.push(nuevoUsuarioActivo);
+
+                // 2. Eliminar de pagos pendientes
+                pagosPendientes.splice(index, 1);
+                renderizarPagosPendientesAdmin();
+                renderizarUsuariosActivosAdmin();
+                
+                // 3. Si el usuario actual es el que paga, activar su juego
+                if (currentUserPaymentID === pago.id) {
+                     nombreUsuarioActual = pago.nombre;
+                     cartonesActivos = cartonesGenerados;
+                     estadoJuego = partidaIniciadaAdmin ? 'ACTIVO' : 'ESPERA_INICIO';
+                     
+                     document.getElementById('area-seleccion').style.display = 'none';
+                     document.getElementById('panel-pago').style.display = 'none';
+                     document.getElementById('area-juego-activa').style.display = 'block';
+                     renderizarTodosLosCartones(cartonesActivos);
+                     
+                     document.getElementById('mensaje-estado').textContent = partidaIniciadaAdmin 
+                         ? '¡Pago Aprobado! ¡El juego ya está ACTIVO!'
+                         : '¡Pago Aprobado! Espera a que el administrador inicie la partida.';
+
+                }
+
+                 // Usar alert temporalmente hasta implementar un modal personalizado.
+                alert(`Pago de ${pago.nombre} aprobado. Usuario activado con ${numCartones} cartones.`);
+            }
+        }
+
+        function rechazarPago(idPago) {
+            const index = pagosPendientes.findIndex(p => p.id === idPago);
+            if (index !== -1) {
+                const pago = pagosPendientes[index];
+                pagosPendientes.splice(index, 1);
+                renderizarPagosPendientesAdmin();
+                
+                // Si el usuario actual es el que paga, resetear su juego
+                if (currentUserPaymentID === pago.id) {
+                    resetearPantallaJuego();
+                    document.getElementById('mensaje-estado').textContent = 'Tu pago fue rechazado. Por favor, compra cartones de nuevo y verifica tus datos de pago.';
+                }
+
+                 // Usar alert temporalmente hasta implementar un modal personalizado.
+                alert(`Pago de ${pago.nombre} rechazado.`);
+            }
+        }
+
+        function renderizarPagosPendientesAdmin() {
+            const contenedor = document.getElementById('pagos-pendientes-table');
+            if (pagosPendientes.length === 0) {
+                contenedor.innerHTML = '<p>No hay pagos pendientes.</p>';
+                return;
+            }
+
+            let html = '<table class="admin-table"><thead><tr><th>ID/Nombre</th><th>Cartones/Costo</th><th>Ref./Banco</th><th>Acción</th></tr></thead><tbody>';
+
+            pagosPendientes.forEach(pago => {
+                html += `
+                    <tr>
+                        <td><strong>${pago.nombre}</strong><br><small>${pago.id}</small></td>
+                        <td>${pago.cartones} (${pago.costo.toFixed(2)} Bs)</td>
+                        <td>${pago.referencia}<br><small>${pago.banco}</small></td>
+                        <td>
+                            <button class="btn-admin btn-aprobar" onclick="aprobarPago('${pago.id}')">Aprobar</button>
+                            <button class="btn-admin btn-rechazar" onclick="rechazarPago('${pago.id}')">Rechazar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            contenedor.innerHTML = html;
+        }
+
+        function renderizarUsuariosActivosAdmin() {
+            const contenedor = document.getElementById('usuarios-activos-table');
+            if (usuariosActivos.length === 0) {
+                contenedor.innerHTML = '<p>No hay usuarios activos jugando.</p>';
+                return;
+            }
+
+            let html = '<table class="admin-table"><thead><tr><th>Nombre</th><th>Cartones</th></tr></thead><tbody>';
+
+            usuariosActivos.forEach(user => {
+                html += `
+                    <tr>
+                        <td><strong>${user.nombre}</strong><br><small>ID: ${user.id}</small></td>
+                        <td>${user.numCartones}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            contenedor.innerHTML = html;
+        }
+
+        function mostrarRevisionBingoAdmin() {
+             const revisionPanel = document.getElementById('admin-revision-bingo');
+             const info = document.getElementById('revision-bingo-info');
+
+             if (ultimoBingo) {
+                 revisionPanel.style.display = 'block';
+                 info.innerHTML = `
+                     <p>El usuario <strong>${ultimoBingo.nombre}</strong> ha cantado BINGO.</p>
+                     <p>Cartón Ganador: <strong>#${ultimoBingo.cartonID}</strong></p>
+                     <p>Bolas Extraídas hasta el momento: <strong>${ultimoBingo.bolas.length}</strong></p>
+                     <p>Tiempo: ${ultimoBingo.timestamp}</p>
+                     <p style="font-weight: bold; color: yellow;">¡VERIFICA MANUALMENTE SU CARTÓN!</p>
+                 `;
+             } else {
+                 revisionPanel.style.display = 'none';
+             }
+        }
+
+        function aprobarBingoAdmin() {
+             if (!ultimoBingo) return;
+
+             // Usar alert temporalmente hasta implementar un modal personalizado.
+             alert(`BINGO APROBADO para ${ultimoBingo.nombre}. Partida Finalizada.`);
+             
+             // Lógica de finalización (compartida con el usuario)
+             finalizarPartida();
+             
+             // Ocultar panel de revisión
+             document.getElementById('admin-revision-bingo').style.display = 'none';
+        }
+        
+        function rechazarBingoAdmin() {
+             if (!ultimoBingo) return;
+             
+             // Usar alert temporalmente hasta implementar un modal personalizado.
+             alert(`BINGO RECHAZADO para ${ultimoBingo.nombre}. El juego continúa.`);
+             
+             // Limpiar el estado de revisión y reanudar
+             ultimoBingo = null;
+             estadoJuego = 'ACTIVO';
+             document.getElementById('admin-revision-bingo').style.display = 'none';
+             
+             // Reanudar extracción de bolas
+             // Nota: Si la partida se detuvo, iniciarExtraccionBolas() la reanuda, si no, extrae la primera.
+             if (!partidaIniciadaAdmin) {
+                 iniciarExtraccionBolas(); 
+             } else {
+                 iniciarTemporizador(); // Continuar el temporizador si estaba en pausa forzada por revisión
+             }
+             
+             // Notificar al usuario (si es el actual)
+             // Nota: Aquí se asume que el usuario está esperando
+             document.getElementById('mensaje-estado').textContent = 'BINGO RECHAZADO. Continúa el juego.';
+             document.getElementById('btn-cantar-bingo').disabled = false;
+        }
+
+        function finalizarPartida() {
+             // Detener la extracción
+             detenerExtraccionBolas();
+             
+             // Mover a todos los usuarios a estado FINALIZADO
+             estadoJuego = 'FINALIZADO';
+             
+             // Mostrar panel de fin de juego al usuario
+             document.getElementById('area-juego-activa').style.display = 'none';
+             document.getElementById('panel-fin-juego').style.display = 'block';
+             
+             // Si hubo un bingo aprobado
+             if (ultimoBingo) {
+                 document.getElementById('mensaje-fin-juego').innerHTML = `
+                    ¡${ultimoBingo.nombre} ha ganado ${PREMIO_ACTUAL.toFixed(2)} Bs!
+                    <br>¡Únete a la siguiente ronda!
+                 `;
+             } else {
+                 document.getElementById('mensaje-fin-juego').textContent = 'La partida ha finalizado. ¿Quieres unirte a la siguiente ronda?';
+             }
+             
+             // Reiniciar el estado de juego y usuarios para la siguiente ronda (simulación)
+             usuariosActivos = [];
+             renderizarUsuariosActivosAdmin();
+             ultimoBingo = null; 
+        }
+
+        // === INICIALIZACIÓN Y LISTENERS ===
+        
+        function setupEventListeners() {
+            // 1. Botones de Selección de Cantidad de Cartones
+            document.querySelectorAll('#opcion-cantidad button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const cantidad = parseInt(this.dataset.cantidad);
+                    seleccionarCantidad(cantidad);
+                });
+            });
+
+            // 2. Botón de Pago
+            document.getElementById('btn-ya-pague').addEventListener('click', registrarPago);
+
+            // 3. Botón de Cantar Bingo
+            document.getElementById('btn-cantar-bingo').addEventListener('click', cantarBingo);
+            
+            // 4. Botones de Fin de Juego
+            document.getElementById('btn-jugar-de-nuevo').addEventListener('click', resetearPantallaJuego);
+            document.getElementById('btn-finalizar-juego').addEventListener('click', () => {
+                 // Usar alert temporalmente hasta implementar un modal personalizado.
+                 alert("Gracias por jugar a Bingo Caribe Play. ¡Esperamos verte pronto!");
+                 resetearPantallaJuego();
+            });
+            
+            // 5. Botón de Reclamar Premio (solo si el admin aprueba)
+            document.getElementById('claim-prize-whatsapp-btn').addEventListener('click', () => {
+                 const mensaje = encodeURIComponent(`Hola, soy ${nombreUsuarioActual} (ID de pago: ${currentUserPaymentID}) y acabo de ganar el premio de Bingo Caribe Play de Bs ${PREMIO_ACTUAL.toFixed(2)}. ¡Por favor, contáctame para coordinar el pago!`);
+                 window.open(`https://wa.me/584128481584?text=${mensaje}`, '_blank');
+            });
+
+
+            // 6. Botones de Admin
+            document.getElementById('btn-soy-administrador').addEventListener('click', mostrarPanelAdminAcceso);
+            document.getElementById('btn-desbloquear-admin').addEventListener('click', loginAdmin);
+            document.getElementById('btn-guardar-premio').addEventListener('click', guardarPremioAdmin);
+            document.getElementById('btn-iniciar-bolas').addEventListener('click', iniciarExtraccionBolas);
+            document.getElementById('btn-detener-bolas').addEventListener('click', detenerExtraccionBolas);
+            document.getElementById('btn-aprobar-bingo').addEventListener('click', aprobarBingoAdmin);
+            document.getElementById('btn-rechazar-bingo').addEventListener('click', rechazarBingoAdmin);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            inicializarTableroGeneral();
+            setupEventListeners();
+            actualizarDisplayPremio();
+            renderizarUltimasBolas(); // Renderizar inicial vacío
+            
+            // Si el usuario ya había un pago pendiente y recarga, intentamos reanudar
+            if (currentUserPaymentID) {
+                // Estado de juego debe ser 'ESPERA_PAGO' si tiene un ID de pago
+                document.getElementById('area-seleccion').style.display = 'none';
+                
+                const mensajeContainer = document.getElementById('mensaje-estado');
+                mensajeContainer.innerHTML = `
+                    Esperando aprobación del administrador. Tu ID de pago es: <strong style="color: var(--color-primary);">${currentUserPaymentID}</strong>. 
+                    <br>
+                    <button id="btn-cancelar-espera" style="margin-top: 10px; background-color: #f44336; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold;">
+                        Cancelar y Recomenzar
+                    </button>
+                `;
+                estadoJuego = 'ESPERA_PAGO';
+                
+                // Añadir el listener al botón de cancelación
+                document.getElementById('btn-cancelar-espera').addEventListener('click', cancelarEspera);
+            }
+        });
+    </script>
+</body>
+</html>
